@@ -22,10 +22,17 @@
      lc -O m*.c -o metamath.exe
 */
 
-#define MVERSION "0.168 8-Dec-2018"
-/* 0.168 8-Dec-2018 nm mmcmds.c - fix bug #256 reported by Jim Kingdon
-   (https://github.com/metamath/set.mm/issues/497).
-   metamath.c - validate /NO_REPEATED_STEPS without /LEMMON */
+#define MVERSION "0.171 13-Dec-2018"
+/* 0.171 13-Dec-2018 nm metamath.c, mmcmdl.c, mmhlpa.c, mmcmds.c,h, mmwtex.c,h
+   - add fine-grained qualfiers to MARKUP command */
+/* 0.170 12-Dec-2018 nm mmwtex.c - restore line accidentally deleted in 0.169 */
+/* 0.169 10-Dec-2018 nm metamath.c, mmcmds.c,h, mmcmdl.c, mmpars.c, mmhlpa.c,
+   mmwtex.c - Add MARKUP command.
+   9-Dec-2018 nm mmwtex.c - escape literal "[" with "[[" in comments. */
+/* 0.168 8-Dec-2018 nm metamath.c - validate that /NO_REPEATED_STEPS is used
+   only with /LEMMON.
+   8-Dec-2018 nm mmcmds.c - fix bug #256 reported by Jim Kingdon
+   (https://github.com/metamath/set.mm/issues/497). */
 /* 0.167 13-Nov-2018 nm mmcmds.c - SHOW TRACE_BACK .../COUNT now uses proof
    the way it's stored (previously, it always uncompressed the proof).  The
    new step count (for compressed proofs) corresponds to the step count the
@@ -2515,7 +2522,7 @@ void command(int argc, char *argv[])
             /* 17-Nov-2015 nm Added 3rd & 4th arguments */
             printTexComment(str3,              /* Sends result to texFilePtr */
                 0, /* 1 = htmlCenterFlag */
-                0, /* 1 = errorsOnly */
+                PROCESS_EVERYTHING, /* actionBits */ /* 13-Dec-2018 nm */
                 0  /* 1 = noFileCheck */ );
             texFilePtr = NULL;
             outputToString = 1; /* Restore after printTexComment */
@@ -2565,7 +2572,10 @@ void command(int argc, char *argv[])
 
             /* 29-Jul-04 nm Put the previous, current, and next statement
                labels in HTML comments so a script can use them to update
-               web site incrementally */
+               web site incrementally.  This would be done by searching
+               for "For script" and gather label between = and --> then
+               regenerate just those statements.  Previous and next labels
+               are included to prevent dead links if they don't exist yet. */
             /* This section can be deleted without side effects */
             /* Find the previous statement with a web page */
             j = 0;
@@ -2576,9 +2586,13 @@ void command(int argc, char *argv[])
                 break;
               }
             }
-            if (j) print2("<!-- For script: %s -->\n", statement[j].labelName);
+            /* 13-Dec-2018 nm This isn't used anywhere yet.  But fix error
+               in current label and also identify previous, current, next */
+            if (j) print2("<!-- For script: previous = %s -->\n",
+                statement[j].labelName);
             /* Current statement */
-            print2("<!-- For script: %s -->\n", statement[s].labelName);
+            print2("<!-- For script: current = %s -->\n",
+                statement[stmt].labelName);
             /* Find the next statement with a web page */
             j = 0;
             for (q = stmt + 1; q <= statements; q++) {
@@ -2588,7 +2602,8 @@ void command(int argc, char *argv[])
                 break;
               }
             }
-            if (j) print2("<!-- For script: %s -->\n", statement[j].labelName);
+            if (j) print2("<!-- For script: next = %s -->\n",
+                statement[j].labelName);
             /* End of 29-Jul-04 section */
 
             outputToString = 0;
@@ -7741,6 +7756,27 @@ void command(int argc, char *argv[])
           (flag)i, /* 1 = skip checking date consistency */
           (flag)j, /* 1 = skip checking external files GIF, mmset.html,... */
           (flag)k); /* 1 = verbose mode */  /* 26-Dec-2016 nm */
+      continue;
+    }
+
+    /* 10-Dec-2018 nm Added */
+    if (cmdMatches("MARKUP")) {
+      htmlFlag = 1;
+      altHtmlFlag = (switchPos("/ ALT_HTML") != 0);
+      if ((switchPos("/ HTML") != 0) == (switchPos("/ ALT_HTML") != 0)) {
+        print2("?Please specify exactly one of / HTML and / ALT_HTML.\n");
+        continue;
+      }
+      i = 0;
+      i = ((switchPos("/ SYMBOLS") != 0) ? PROCESS_SYMBOLS : 0)
+          + ((switchPos("/ LABELS") != 0) ? PROCESS_LABELS : 0)
+          + ((switchPos("/ NUMBER_AFTER_LABEL") != 0) ? ADD_COLORED_LABEL_NUMBER : 0)
+          + ((switchPos("/ BIB_REFS") != 0) ? PROCESS_BIBREFS : 0)
+          + ((switchPos("/ UNDERSCORES") != 0) ? PROCESS_UNDERSCORES : 0);
+      processMarkup(fullArg[1], /* Input file */
+          fullArg[2],  /* Output file */
+          (switchPos("/ CSS") != 0),
+          i); /* Action bits */
       continue;
     }
 

@@ -591,8 +591,55 @@ H("       recursive, or self reference to a file is ignored");
 H("");
 
 
+/* 10-Dec-2018 nm */
 printHelp = !strcmp(saveHelpCmd, "HELP MARKUP");
-H("See HELP VERIFY MARKUP.");
+H("Syntax:  MARKUP <inpfile> <outfile> [/ HTML] [/ ALT_HTML] [/ SYMBOLS]");
+H("    [/ LABELS] [/ NUMBER_AFTER_LABEL] [/ BIBLIOGRAPHY] [/ UNDERSCORES]");
+H("    [/ CSS]");
+H("This command will read an arbitrary <inpfile>, normally an HTML file");
+H("with markup, treating it as if it were a giant comment in a database file");
+H("and translating any markup into HTML.  The translated result is written to");
+H("<outfile>.  Note that the file names may be enclosed in single or double");
+H("quotes; this is required if a file name contains slashes, as might be the");
+H("case with Unix file path names.");
+H("");
+H("See HELP VERIFY MARKUP for the markup language used in database");
+H("comments.");
+H("");
+H("This command requires that a database source file (such as set.mm) be");
+H("read.  See HELP READ. The math symbols and other information are taken");
+H("from that database.  The use of VERIFY MARKUP * is recommended to help");
+H("ensure the database has no errors in its symbol definitions.");
+H("");
+H("Qualifiers:");
+H("    / HTML (/ ALT_HTML) - use the symbols defined by the htmldef");
+H("        (althtmldef) statements in the $t comment in the .mm database.");
+H("        Usually these are GIF or Unicode math symbols respectively.");
+H("        Exactly one of / HTML and / ALT_HTML must always be specified.");
+H("    / SYMBOLS - process symbols inside backquotes.");
+H("    / LABELS - process labels preceded by tilde.");
+H("    / NUMBER_AFTER_LABEL - add colored statement number after each label.");
+H("    / BIB_REFS - process bibliographic references in square brackets.");
+H("        The file specified by htmlbibliography in the $t comment in the");
+H("        .mm database is checked to be sure the references exist.");
+H("    / UNDERSCORES - process underscores to produce italic text or");
+H("        subscripts.");
+H("    / CSS - add CSS before \"</HEAD>\" in the input file.  The CSS is");
+H("        specified by htmlcss in the $t comment in .mm database.  If");
+H("        \"</HEAD>\" is not present, or the CSS is already present (with");
+H("        an exact match), nothing will be done.");
+H("");
+H("Note:  The existence of GIF files for symbols isn't checked.  Use VERIFY");
+H("MARKUP for that.  However, validity of bibliographical references is");
+H("checked since VERIFY MARKUP can't do that.  If the required file for");
+H("/ BIB_REFS (such as mmset.html) isn't present, a warning will be");
+H("displayed.  To avoid literal \"`\", \"~\", and \"[\" from being");
+H("interpreted by / SYMBOLS, / LABELS, and / BIB_REFS respectively, escape");
+H("them with \"``\", \"~~\", and \"[[\" in the input file.  Literal \"`\"");
+H("must always be escaped even if / SYMBOLS is omitted, because the");
+H("algorithm will still use \"`...`\" to avoid interpreting special");
+H("characters in math symbols.");
+H("");
 
 
 printHelp = !strcmp(saveHelpCmd, "HELP EXPLORE");
@@ -878,7 +925,7 @@ H("");
 
 
 printHelp = !strcmp(saveHelpCmd, "HELP OPEN TEX");
-H("Syntax:  OPEN TEX <file>");
+H("Syntax:  OPEN TEX <file> [/ NO_HEADER] [/ OLD_TEX]");
 H("");
 H("This command opens a file for writing LaTeX source and writes a LaTeX");
 H("header to the file.  LaTeX source can be written with the SHOW PROOF,");
@@ -890,10 +937,9 @@ H("To format and print the LaTeX source, you will need the TeX program,");
 H("which is standard in most Linux, Unix, and MacOSX installations and");
 H("available for Windows.");
 H("");
-H("Optional qualifier:");
+H("Optional qualifiers:");
 H("    / NO_HEADER - This qualifier prevents a standard LaTeX header and");
 H("        trailer from being included with the output LaTeX code.");
-H("Optional qualifier:");
 H("    / OLD_TEX - This qualifier produces a header with macro definitions");
 H("        for use with / OLD_TEX qualifiers of SHOW STATEMENT and SHOW");
 H("        PROOF.  It is obsolete and will be removed eventually.");
